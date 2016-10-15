@@ -170,32 +170,39 @@ class Linear(Node):
 
     def backward(self):
         self.dvalues = {n: 0 for n in self.input_nodes}
+        w = self.input_nodes[1].value
+        x = self.input_nodes[0].value
+        b = self.input_nodes[2].value
         if len(self.output_nodes) == 0:
-            self.dvalues[self.input_nodes[0]] += self.input_nodes[1].value
-            self.dvalues[self.input_nodes[1]] += self.input_nodes[0].value
-            self.dvalues[self.input_nodes[0]] += 1
+            self.dvalues[self.input_nodes[0]] += np.vstack(2 * [np.sum(w, 1)])
+            self.dvalues[self.input_nodes[1]] += np.vstack(2 * [np.sum(x.T, 1)]).T
+            self.dvalues[self.input_nodes[2]] += np.vstack(2 * [np.sum(np.ones_like(b), 1)]).T
             return
         for n in self.output_nodes:
             dval = n.dvalues[self]
-            self.dvalues[self.input_nodes[0]] += self.input_nodes[1].value.dot(dval)
-            self.dvalues[self.input_nodes[1]] += self.input_nodes[0].value.dot(dval)
-            self.dvalues[self.input_nodes[0]] += dval
+            self.dvalues[self.input_nodes[0]] += dval * np.vstack(2 * [np.sum(w, 0)])
+            self.dvalues[self.input_nodes[1]] += dval * np.vstack(2 * [np.sum(x, 0)]).T
+            self.dvalues[self.input_nodes[2]] += dval * np.vstack(2 * [np.sum(np.ones_like(b), 1)]).T
 
 class Sigmoid(Node):
     def __init__(self, x):
         Node.__init__(self, [x])
 
     def _sigmoid(self, x):
-        # TODO: implement sigmoid function
-        pass
+        return 1. / (1. + np.exp(-x))
 
     def forward(self):
-        # TODO: implement
-        pass
+        self.value = self._sigmoid(self.input_nodes[0].value)
 
     def backward(self):
-        # TODO: implement
         self.dvalues = {n: np.zeros_like(n.value) for n in self.input_nodes}
+        x = self.input_nodes[0]
+        if len(self.output_nodes) == 0:
+            self.dvalues[x] += np.exp(x.value) / ((np.exp(x.value) + 1) ** 2)
+            return
+        for n in self.output_nodes:
+            dval = n.dvalues[self]
+            self.dvalues[x] += dval * np.exp(x.value) / ((np.exp(x.value) + 1) ** 2)
 
 
 # NOTE: assume y is a vector with values 0-9
@@ -213,18 +220,16 @@ class CrossEntropyWithSoftmax(Node):
         return np.mean(preds == self.input_nodes[1].value)
 
     def _softmax(self, x):
-        # TODO: implement softmax function
-        pass
+        ex = np.exp(x)
+        return ex / np.sum(ex, 1, keepdims = True)
 
     def forward(self):
-        # TODO: implement
-        pass
+        self.value = -np.log(self._softmax(self.input_nodes[0].value))[0,self.input_nodes[1].value]
 
     def backward(self):
         # TODO: implement
-        assert len(self.output_nodes) == 0
         self.dvalues = {n: np.zeros_like(n.value) for n in self.input_nodes}
-
+        if len(self.output_nodes) == 0
 
 #
 # YOU DON'T HAVE TO IMPLEMENT ANYTHING IN THESE FUNCTIONS.
