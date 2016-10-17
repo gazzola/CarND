@@ -1,0 +1,4 @@
+tensorflow\ labs/1_notmnist/notMNIST_small/
+tensorflow\ labs/1_notmnist/notMNIST_large/
+*.tar.gz
+*.pyc
