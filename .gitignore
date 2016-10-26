@@ -1,5 +1,4 @@
-tensorflow\ labs/1_notmnist/notMNIST_small/
-tensorflow\ labs/1_notmnist/notMNIST_large/
+.DS_Store
 *.tar.gz
 *.pyc
 # Byte-compiled / optimized / DLL files
