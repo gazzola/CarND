@@ -82,6 +82,16 @@ def rescale(matrix):
         nmatrix[:,:,i] = (2. * matrix[:,:,i] / 255.) - 1.
     return nmatrix
     
+# Preparing the data
+X_train_prep = np.array([rescale(preprocess(img)) for img in X_train])
+X_test_prep = np.array([rescale(preprocess(img)) for img in X_test])
+
+# Repeating the basic data summary for the preprocessed data.
+
+n_train = len(X_train_prep)
+n_test = len(X_test_prep)
+image_shape = X_train_prep[0].shape
+    
 ### Define your architecture here.
 ### Feel free to use as many code cells as needed.
 import tensorflow as tf
@@ -129,7 +139,7 @@ biases = {
 # first convolution
 layer1 = tf.nn.conv2d(input = inputs, filter = weights["conv1"],
                       strides = stc, padding = "VALID")
-layer1 = tf.add(layer1, biases["conv1"])
+layer1 = tf.nn.bias_add(layer1, biases["conv1"])
 
 # first max pooling
 layer2 = tf.nn.max_pool(value = layer1, ksize = pwnd,
@@ -139,7 +149,7 @@ layer2 = tf.tanh(layer2)
 # second convolution
 layer3 = tf.nn.conv2d(input = layer2, filter = weights["conv2"],
                       strides = stc, padding = "VALID")
-layer3 = tf.add(layer3, biases["conv2"])
+layer3 = tf.nn.bias_add(layer3, biases["conv2"])
 
 # second max pooling
 layer4 = tf.nn.max_pool(value = layer3, ksize = pwnd,
@@ -149,7 +159,7 @@ layer4 = tf.tanh(layer4)
 # third convolution
 layer5 = tf.nn.conv2d(input = layer4, filter = weights["conv3"],
                       strides = stc, padding = "VALID")
-layer5 = tf.add(layer5, biases["conv3"])
+layer5 = tf.nn.bias_add(layer5, biases["conv3"])
 
 # third max pooling
 layer6 = tf.nn.max_pool(value = layer5, ksize = pwnd,
@@ -158,11 +168,11 @@ layer5 = tf.tanh(layer5)
 
 # fully connected layer
 layer7 = tf.matmul(tf.reshape(layer6, [-1, 2250]), weights["mult1"])
-layer7 = tf.tanh(tf.add(layer7, biases["mult1"]))
+layer7 = tf.tanh(tf.nn.bias_add(layer7, biases["mult1"]))
 
 # output layer
 output = tf.matmul(layer7, weights["mult2"])
-output = tf.nn.softmax(tf.add(output, biases["mult2"]))
+output = tf.nn.softmax(tf.nn.bias_add(output, biases["mult2"]))
 
 print("Architecture built successfully!")
 
@@ -181,15 +191,6 @@ batch_size = 500
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(output, labels))
 optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
 
-# Preparing the data
-X_train_prep = np.array([rescale(preprocess(img)) for img in X_train])
-X_test_prep = np.array([rescale(preprocess(img)) for img in X_test])
-
-### Repeating the basic data summary for the preprocessed data.
-
-n_train = len(X_train_prep)
-n_test = len(X_test_prep)
-image_shape = X_train_prep[0].shape
 
 print("Number of training examples =", n_train)
 print("Number of testing examples =", n_test)
